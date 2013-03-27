@@ -19,7 +19,7 @@ def main():
     for name, (_, _, file_path) in WARNING_METADATA.iteritems():
         for (consultant, num_warned) in count_warnings(file_path).iteritems():
             warnings[consultant][name] = num_warned
-    print_warnings(WARNING_METADATA, warnings)
+    print_warnings(WARNING_METADATA, sort_order, warnings)
 
 def set_and_parse_args(metadata):
     parser = ArgumentParser()
@@ -70,8 +70,27 @@ def count_warnings(file_path):
             warnings[consultant] += 1
     return warnings
 
-def print_warnings(metadata, warnings):
-    pass
+def print_warnings(metadata, sort_order, warnings):
+    # Print header.
+    print # Blank.
+    out_fmt = ' {:>5} ' * len(sort_order) + ' {}'
+    # Fill col_names with warning short_names.
+    col_names = map(lambda warning_name: metadata[warning_name][0], sort_order)
+    col_names.append('who')
+    print out_fmt.format(*tuple(col_names))
+    print ' ----- ' * len(sort_order) + ' ---'
+
+    # Print sorted consultant scores.
+    sort_col = sort_order[0]
+    sorted_warnings = sorted(warnings.iteritems(), reverse=True,
+            key=lambda (k, v): v.get(sort_col, 0))
+    for consultant, warning_to_num in sorted_warnings:
+        # Get the number warned for each warning type for this consultant.
+        col_vals = map(lambda warning_name: warning_to_num.get(warning_name,
+                0), sort_order)
+        col_vals.append(consultant)
+        print out_fmt.format(*tuple(col_vals))
+    print # Blank.
 
 if __name__ == '__main__':
     main()
