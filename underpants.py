@@ -12,6 +12,10 @@ WARNING_METADATA = {
 }
 DEFAULT_SORT_COL = 'food-warnings'
 
+ACTIVE_CONSULTANT_FILE = DATA_DIR + 'sched/sched.consultnicks'
+# Consultant names to be excluded that are read from ACTIVE_CONSULTANT_FILE.
+ACTIVE_CONSULTANT_EXCLUSION = set(['FREE', 'HOLIDAY', 'CLOSED'])
+
 def main():
     args = set_and_parse_args(WARNING_METADATA)
     sort_order = get_sort_order(args, WARNING_METADATA)
@@ -19,10 +23,12 @@ def main():
     for name, (_, _, file_path) in WARNING_METADATA.iteritems():
         for (consultant, num_warned) in count_warnings(file_path).iteritems():
             warnings[consultant][name] = num_warned
-    print_warnings(WARNING_METADATA, sort_order, warnings)
+    print_warnings(args, WARNING_METADATA, sort_order, warnings)
 
 def set_and_parse_args(metadata):
     parser = ArgumentParser()
+    parser.add_argument('-a', '--all', action='store_true',
+            help='Show all consultants')
     sort_group = parser.add_mutually_exclusive_group()
     # Add sort arg for each element in metadata generically.
     for warning_name, (short_name, short_flag, _) in metadata.iteritems():
@@ -37,6 +43,7 @@ def get_sort_order(args, metadata):
     # Set leading column.
     out = []
     for flag_name, flag_is_provided in vars(args).iteritems():
+        if 'sort' not in flag_name: continue
         if flag_is_provided:
             flag_name = flag_name[5:] # Remove 'sort_'.
             # Find the full warning name from the flag name.
@@ -70,7 +77,7 @@ def count_warnings(file_path):
             warnings[consultant] += 1
     return warnings
 
-def print_warnings(metadata, sort_order, warnings):
+def print_warnings(args, metadata, sort_order, warnings):
     # Print header.
     print # Blank.
     out_fmt = ' {:>5} ' * len(sort_order) + ' {}'
@@ -81,6 +88,7 @@ def print_warnings(metadata, sort_order, warnings):
     print ' ----- ' * len(sort_order) + ' ---'
 
     # Print sorted consultant scores.
+    if not args.all: warnings = remove_inactive_consultants(warnings)
     sort_col = sort_order[0]
     sorted_warnings = sorted(warnings.iteritems(), reverse=True,
             key=lambda (k, v): v.get(sort_col, 0))
@@ -91,6 +99,20 @@ def print_warnings(metadata, sort_order, warnings):
         col_vals.append(consultant)
         print out_fmt.format(*tuple(col_vals))
     print # Blank.
+
+def remove_inactive_consultants(consultants):
+    """Takes {consultant: val} dict and removes inactive consultants.
+
+    Returns a new dict without those inactive consultants.
+
+    """
+    active_consultants = set()
+    with open(ACTIVE_CONSULTANT_FILE) as f:
+        for line in f: active_consultants.add(line.split()[1])
+    active_consultants -= ACTIVE_CONSULTANT_EXCLUSION
+    consultants = filter(lambda (key, value): key in active_consultants,
+            consultants.iteritems())
+    return dict(consultants)
 
 if __name__ == '__main__':
     main()
