@@ -14,7 +14,7 @@ DEFAULT_SORT_COL = 'food-warnings'
 
 def main():
     args = set_and_parse_args(WARNING_METADATA)
-    sort_col = get_sort_col(args)
+    sort_order = get_sort_order(args, WARNING_METADATA)
     warnings = defaultdict(dict)
     for name, (_, _, file_path) in WARNING_METADATA.iteritems():
         for (consultant, num_warned) in count_warnings(file_path).iteritems():
@@ -32,8 +32,23 @@ def set_and_parse_args(metadata):
                 action='store_true', help=help_str)
     return parser.parse_args()
 
-def get_sort_col(args):
-    pass
+def get_sort_order(args, metadata):
+    """Returns an list of warning names written in the order to be sorted."""
+    # Set leading column.
+    out = []
+    for flag_name, flag_is_provided in vars(args).iteritems():
+        if flag_is_provided:
+            flag_name = flag_name[5:] # Remove 'sort_'.
+            # Find the full warning name from the flag name.
+            for warning_name, (short_name, _, _) in metadata.iteritems():
+                if short_name == flag_name:
+                    out.insert(0, warning_name)
+                    break
+            else: assert False
+    if len(out) == 0: out.append(DEFAULT_SORT_COL)
+
+    # Insert remaining columns.
+    return out + filter(lambda key: key != out[0], metadata.iterkeys())
 
 def count_warnings(file_path):
     """Returns a Counter object with the number of warnings per consultant.
