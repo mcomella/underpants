@@ -1,0 +1,10 @@
+underpants README
+=================
+"underpants" is a leaderboard to supplement the Brown CS consultant hours
+leaderboard known as "[https://github.com/mcomella/slacks](pants)". While pants
+handles hours exclusively, underpants handles any other statistics that can be
+found on a leaderboard such as food and printer warnings.
+
+Usage
+-----
+To display a leaderboard for other consultant statistics, run `./underpants.py`.
