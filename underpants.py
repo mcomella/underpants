@@ -1,5 +1,24 @@
 #!/usr/bin/env python2.7
 
+"""
+"underpants" is a leaderboard to supplement the Brown CS consultant hours
+leaderboard known as "pants". While pants handles hours exclusively, underpants
+handles any other statistics that can be found on a leaderboard such as food
+warnings and printer warnings given out.
+
+A warning that mantains a data file with the generic line format,
+
+    warned_user timestamp consultant comment
+
+where warned_user = the user who was warned
+      timestamp = the unix timestamp at the time of the warning
+      consultant = the consultant who warned the user
+      comment = the string submitted for the reason of the warning
+
+can be easily added to the output by adding an appropriate entry into the
+WARNING_METADATA dict.
+
+"""
 from argparse import ArgumentParser
 from collections import Counter, defaultdict
 
@@ -60,14 +79,8 @@ def get_sort_order(args, metadata):
 def count_warnings(file_path):
     """Returns a Counter object with the number of warnings per consultant.
 
-    Counts warnings from the given file, expecting the file to be of format:
-
-        warned_user timestamp consultant comment
-
-    where warned_user = the user who was warned
-          timestamp = the unix timestamp at the time of the warning
-          consultant = the consultant who warned the user
-          comment = the string submitted for the reason of the warning
+    Counts warnings from the given file, with the expected format given in the
+    introductory docstring.
 
     """
     warnings = Counter()
